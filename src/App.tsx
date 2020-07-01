@@ -4,12 +4,27 @@ import {
   Legend,
   Line,
   LineChart,
+  ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
 import useInterval from "./use-interval";
-import "./App.css";
+import { makeStyles } from "@material-ui/core/styles";
+import Paper from "@material-ui/core/Paper";
+import Grid from "@material-ui/core/Grid";
+import { Button, TextField } from "@material-ui/core";
+
+const useStyles = makeStyles((theme) => ({
+  root: {
+    flexGrow: 1,
+  },
+  paper: {
+    padding: theme.spacing(2),
+    textAlign: "center",
+    color: theme.palette.text.secondary,
+  },
+}));
 
 interface PIDController {
   kp: number;
@@ -169,11 +184,6 @@ function App() {
   }
 
   useInterval(() => {
-    // if (period === 0) {
-    //   setPlotCurrent([{ period: 0, reference: 0, actual: 0 }]);
-    //   setPlotCumulative([{ period: 0, reference: 0, actual: 0 }]);
-    //   setPlotPacingFactors([{ period: 0, value: 0.1 }]); // TODO: use initial value
-    // }
     if (period >= TOTAL_PERIOD) {
       setDelay(null);
     } else {
@@ -181,136 +191,136 @@ function App() {
     }
   }, delay);
 
+  const classes = useStyles();
+
   return (
-    <div>
-      <div>
-        <label>
-          Kp:
-          <input
-            type="number"
-            value={kp}
-            onChange={(e) => setKp(Number(e.target.value))}
-            disabled={period > 0}
-          />
-        </label>
-      </div>
+    <div className={classes.root}>
+      <Grid container spacing={1}>
+        <Grid item xs={3}>
+          <Paper className={classes.paper}>
+            <TextField
+              label="Kp"
+              value={kp}
+              disabled={period > 0}
+              type="number"
+              onChange={(e) => setKp(Number(e.target.value))}
+            />
+            <TextField
+              label="Ki"
+              value={ki}
+              disabled={period > 0}
+              type="number"
+              onChange={(e) => setKi(Number(e.target.value))}
+            />
+            <TextField
+              label="Kd"
+              value={kd}
+              disabled={period > 0}
+              type="number"
+              onChange={(e) => setKd(Number(e.target.value))}
+            />
+            <TextField
+              label="Target"
+              value={target}
+              disabled={delay !== null}
+              type="number"
+              onChange={(e) => setTarget(Number(e.target.value))}
+            />
 
-      <div>
-        <label>
-          Ki:
-          <input
-            type="number"
-            value={ki}
-            onChange={(e) => setKi(Number(e.target.value))}
-            disabled={period > 0}
-          />
-        </label>
-      </div>
+            <div>
+              {delay ? (
+                <Button onClick={() => setDelay(null)}>Stop</Button>
+              ) : (
+                <Button
+                  onClick={() => setDelay(INTERVAL)}
+                  disabled={period === TOTAL_PERIOD}
+                >
+                  Start
+                </Button>
+              )}
+              <Button onClick={() => reset()}>Reset</Button>
+            </div>
+          </Paper>
+        </Grid>
 
-      <div>
-        <label>
-          Kd:
-          <input
-            type="number"
-            value={kd}
-            onChange={(e) => setKd(Number(e.target.value))}
-            disabled={period > 0}
-          />
-        </label>
-      </div>
+        <Grid item xs={6}>
+          <Paper className={classes.paper}>
+            <h3>Cumulative Reference vs Actual</h3>
+            <ResponsiveContainer aspect={3}>
+              <LineChart
+                data={plotCumulative}
+                margin={{ left: 20, top: 10, bottom: 10 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis
+                  type="number"
+                  dataKey="period"
+                  label={{
+                    value: "Period",
+                    position: "insideBottomRight",
+                    dy: 10,
+                  }}
+                  domain={[0, TOTAL_PERIOD]}
+                />
+                <YAxis type="number" domain={[0, "auto"]} />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="reference" stroke="#8884d8" />
+                <Line type="monotone" dataKey="actual" stroke="#82ca9d" />
+              </LineChart>
+            </ResponsiveContainer>
 
-      <div>
-        <label>
-          Target:
-          <input
-            type="number"
-            value={target}
-            onChange={(e) => setTarget(Number(e.target.value))}
-            disabled={delay !== null}
-          />
-        </label>
-      </div>
+            <h3>Current Reference vs Actual</h3>
+            <ResponsiveContainer aspect={3}>
+              <LineChart
+                data={plotCurrent}
+                margin={{ left: 20, top: 10, bottom: 10 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis
+                  type="number"
+                  dataKey="period"
+                  label={{
+                    value: "Period",
+                    position: "insideBottomRight",
+                    dy: 10,
+                  }}
+                  domain={[0, TOTAL_PERIOD]}
+                />
+                <YAxis type="number" domain={[0, "auto"]} />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="reference" stroke="#8884d8" />
+                <Line type="monotone" dataKey="actual" stroke="#82ca9d" />
+              </LineChart>
+            </ResponsiveContainer>
 
-      <div>
-        {delay ? (
-          <button onClick={() => setDelay(null)}>Stop</button>
-        ) : (
-          <button
-            onClick={() => setDelay(INTERVAL)}
-            disabled={period === TOTAL_PERIOD}
-          >
-            Start
-          </button>
-        )}
-        <button onClick={() => reset()}>Reset</button>
-      </div>
-
-      <div className="plot-container">
-        <h3>Accumulated Reference vs Actual</h3>
-        <LineChart
-          className="plot"
-          width={1000}
-          height={250}
-          data={plotCumulative}
-          margin={{ left: 20, top: 10, bottom: 10 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis
-            type="number"
-            dataKey="period"
-            label={{ value: "Period", position: "insideBottomRight", dy: 10 }}
-            domain={[0, TOTAL_PERIOD]}
-          />
-          <YAxis type="number" domain={[0, "auto"]} />
-          <Tooltip />
-          <Legend />
-          <Line type="monotone" dataKey="reference" stroke="#8884d8" />
-          <Line type="monotone" dataKey="actual" stroke="#82ca9d" />
-        </LineChart>
-
-        <h3>Current Reference vs Actual</h3>
-        <LineChart
-          className="plot"
-          width={1000}
-          height={250}
-          data={plotCurrent}
-          margin={{ left: 20, top: 10, bottom: 10 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis
-            type="number"
-            dataKey="period"
-            label={{ value: "Period", position: "insideBottomRight", dy: 10 }}
-            domain={[0, TOTAL_PERIOD]}
-          />
-          <YAxis type="number" domain={[0, "auto"]} />
-          <Tooltip />
-          <Legend />
-          <Line type="monotone" dataKey="reference" stroke="#8884d8" />
-          <Line type="monotone" dataKey="actual" stroke="#82ca9d" />
-        </LineChart>
-
-        <h3>Pacing Factor</h3>
-        <LineChart
-          className="plot"
-          width={1000}
-          height={250}
-          data={plotPacingFactors}
-          margin={{ left: 20, top: 10, bottom: 10 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis
-            type="number"
-            dataKey="period"
-            label={{ value: "Period", position: "insideBottomRight", dy: 10 }}
-            domain={[0, TOTAL_PERIOD]}
-          />
-          <YAxis type="number" domain={[0, 1]} />
-          <Tooltip />
-          <Legend />
-          <Line type="monotone" dataKey="value" stroke="#8884d8" />
-        </LineChart>
-      </div>
+            <h3>Pacing Factor</h3>
+            <ResponsiveContainer aspect={3}>
+              <LineChart
+                data={plotPacingFactors}
+                margin={{ left: 20, top: 10, bottom: 10 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis
+                  type="number"
+                  dataKey="period"
+                  label={{
+                    value: "Period",
+                    position: "insideBottomRight",
+                    dy: 10,
+                  }}
+                  domain={[0, TOTAL_PERIOD]}
+                />
+                <YAxis type="number" domain={[0, 1]} />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="value" stroke="#8884d8" />
+              </LineChart>
+            </ResponsiveContainer>
+          </Paper>
+        </Grid>
+      </Grid>
     </div>
   );
 }
