@@ -154,6 +154,9 @@ function App() {
       <Grid container spacing={1}>
         <Grid item xs={3}>
           <Paper className={classes.paper}>
+            <Typography variant="h4" gutterBottom className={classes.paperText}>
+              PID Control Simulator
+            </Typography>
             <Typography
               variant="body1"
               gutterBottom
