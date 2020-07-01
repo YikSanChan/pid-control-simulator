@@ -13,7 +13,7 @@ import useInterval from "./use-interval";
 import { makeStyles } from "@material-ui/core/styles";
 import Paper from "@material-ui/core/Paper";
 import Grid from "@material-ui/core/Grid";
-import { Button, TextField } from "@material-ui/core";
+import { Box, Button, TextField, Typography } from "@material-ui/core";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -23,6 +23,9 @@ const useStyles = makeStyles((theme) => ({
     padding: theme.spacing(2),
     textAlign: "center",
     color: theme.palette.text.secondary,
+  },
+  paperText: {
+    textAlign: "left",
   },
 }));
 
@@ -55,6 +58,17 @@ function setpoint(c: PIDController, v: number): PIDController {
   };
 }
 
+interface ComparePoint {
+  period: number;
+  reference: number;
+  actual: number;
+}
+
+interface Point {
+  period: number;
+  value: number;
+}
+
 // Pacing factor should be within [0, 1]
 function normalize(v: number) {
   if (v > 1) return 1;
@@ -73,17 +87,6 @@ function noise(v: number) {
 
 const TOTAL_PERIOD = 100;
 const INTERVAL = 100;
-
-interface ComparePoint {
-  period: number;
-  reference: number;
-  actual: number;
-}
-
-interface Point {
-  period: number;
-  value: number;
-}
 
 // Fix today's budget and assume a linear forecast
 function App() {
@@ -198,6 +201,33 @@ function App() {
       <Grid container spacing={1}>
         <Grid item xs={3}>
           <Paper className={classes.paper}>
+            <Typography
+              variant="body1"
+              gutterBottom
+              className={classes.paperText}
+            >
+              The PID simulator assumes:
+              <br />
+              (1) 100 periods
+              <br />
+              (2) linear forecast
+              <br />
+              (3) During each period, if pacing factor is set to 1, then roughly
+              $10000 (with noise) will be spent. Therefore please set target
+              &lt; 1000000
+              <br />
+              (4) The noise is simply a uniform distribution in [-1000, +1000]
+              <br />
+              <br />
+              It allows:
+              <br />
+              (1) Set Kp, Ki, Kd, and Target at the beginning of a simulation
+              <br />
+              (2) Pause the simulation half-way, setup a different target value,
+              and start again.
+              <br />
+            </Typography>
+            <Box height={30} />
             <TextField
               label="Kp"
               value={kp}
@@ -226,7 +256,6 @@ function App() {
               type="number"
               onChange={(e) => setTarget(Number(e.target.value))}
             />
-
             <div>
               {delay ? (
                 <Button onClick={() => setDelay(null)}>Stop</Button>
