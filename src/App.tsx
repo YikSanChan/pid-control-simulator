@@ -228,7 +228,7 @@ function App() {
                   Start
                 </Button>
               )}
-              <Button onClick={() => reset()}>Reset</Button>
+              <Button onClick={reset}>Reset</Button>
             </div>
           </Paper>
         </Grid>
