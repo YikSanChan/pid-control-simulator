@@ -2,9 +2,14 @@ import React, { useState } from "react";
 import { Line, YAxis } from "recharts";
 import useInterval from "./use-interval";
 import { makeStyles } from "@material-ui/core/styles";
-import Paper from "@material-ui/core/Paper";
-import Grid from "@material-ui/core/Grid";
-import { Box, Button, TextField, Typography } from "@material-ui/core";
+import {
+  Box,
+  Button,
+  Grid,
+  Paper,
+  TextField,
+  Typography,
+} from "@material-ui/core";
 import { compute, PIDController, setpoint } from "./pid-controller";
 import StyledLineChart, { ComparePoint, Point } from "./styled-line-chart";
 
