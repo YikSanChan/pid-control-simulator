@@ -1,19 +1,12 @@
 import React, { useState } from "react";
-import {
-  CartesianGrid,
-  Legend,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Line, YAxis } from "recharts";
 import useInterval from "./use-interval";
 import { makeStyles } from "@material-ui/core/styles";
 import Paper from "@material-ui/core/Paper";
 import Grid from "@material-ui/core/Grid";
 import { Box, Button, TextField, Typography } from "@material-ui/core";
+import { compute, PIDController, setpoint } from "./pid-controller";
+import StyledLineChart, { ComparePoint, Point } from "./styled-line-chart";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -28,46 +21,6 @@ const useStyles = makeStyles((theme) => ({
     textAlign: "left",
   },
 }));
-
-interface PIDController {
-  kp: number;
-  ki: number;
-  kd: number;
-  lastSetpoint: number;
-  sumError: number;
-  lastError: number;
-  controlValue: number;
-}
-
-function compute(c: PIDController, input: number): PIDController {
-  const error = c.lastSetpoint - input;
-  const sumError = c.sumError + error;
-  const dError = error - c.lastError;
-  return {
-    ...c,
-    sumError,
-    lastError: error,
-    controlValue: c.kp * error + c.ki * sumError + c.kd * dError,
-  };
-}
-
-function setpoint(c: PIDController, v: number): PIDController {
-  return {
-    ...c,
-    lastSetpoint: v,
-  };
-}
-
-interface ComparePoint {
-  period: number;
-  reference: number;
-  actual: number;
-}
-
-interface Point {
-  period: number;
-  value: number;
-}
 
 // Pacing factor should be within [0, 1]
 function normalize(v: number) {
@@ -275,78 +228,24 @@ function App() {
         <Grid item xs={6}>
           <Paper className={classes.paper}>
             <h3>Cumulative Reference vs Actual</h3>
-            <ResponsiveContainer aspect={3}>
-              <LineChart
-                data={plotCumulative}
-                margin={{ left: 20, top: 10, bottom: 10 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  type="number"
-                  dataKey="period"
-                  label={{
-                    value: "Period",
-                    position: "insideBottomRight",
-                    dy: 10,
-                  }}
-                  domain={[0, TOTAL_PERIOD]}
-                />
-                <YAxis type="number" domain={[0, "auto"]} />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="reference" stroke="#8884d8" />
-                <Line type="monotone" dataKey="actual" stroke="#82ca9d" />
-              </LineChart>
-            </ResponsiveContainer>
+            <StyledLineChart data={plotCumulative} xMax={TOTAL_PERIOD}>
+              <YAxis type="number" domain={[0, "auto"]} />
+              <Line type="monotone" dataKey="reference" stroke="#8884d8" />
+              <Line type="monotone" dataKey="actual" stroke="#82ca9d" />
+            </StyledLineChart>
 
             <h3>Current Reference vs Actual</h3>
-            <ResponsiveContainer aspect={3}>
-              <LineChart
-                data={plotCurrent}
-                margin={{ left: 20, top: 10, bottom: 10 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  type="number"
-                  dataKey="period"
-                  label={{
-                    value: "Period",
-                    position: "insideBottomRight",
-                    dy: 10,
-                  }}
-                  domain={[0, TOTAL_PERIOD]}
-                />
-                <YAxis type="number" domain={[0, "auto"]} />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="reference" stroke="#8884d8" />
-                <Line type="monotone" dataKey="actual" stroke="#82ca9d" />
-              </LineChart>
-            </ResponsiveContainer>
+            <StyledLineChart data={plotCurrent} xMax={TOTAL_PERIOD}>
+              <YAxis type="number" domain={[0, "auto"]} />
+              <Line type="monotone" dataKey="reference" stroke="#8884d8" />
+              <Line type="monotone" dataKey="actual" stroke="#82ca9d" />
+            </StyledLineChart>
 
             <h3>Pacing Factor</h3>
-            <ResponsiveContainer aspect={3}>
-              <LineChart
-                data={plotPacingFactors}
-                margin={{ left: 20, top: 10, bottom: 10 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  type="number"
-                  dataKey="period"
-                  label={{
-                    value: "Period",
-                    position: "insideBottomRight",
-                    dy: 10,
-                  }}
-                  domain={[0, TOTAL_PERIOD]}
-                />
-                <YAxis type="number" domain={[0, 1]} />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="value" stroke="#8884d8" />
-              </LineChart>
-            </ResponsiveContainer>
+            <StyledLineChart data={plotPacingFactors} xMax={TOTAL_PERIOD}>
+              <YAxis type="number" domain={[0, 1]} />
+              <Line type="monotone" dataKey="value" stroke="#8884d8" />
+            </StyledLineChart>
           </Paper>
         </Grid>
       </Grid>
