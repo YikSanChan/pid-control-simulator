@@ -6,7 +6,9 @@ import {
   Box,
   Button,
   Grid,
+  MenuItem,
   Paper,
+  Select,
   TextField,
   Typography,
 } from "@material-ui/core";
@@ -21,6 +23,9 @@ const useStyles = makeStyles((theme) => ({
     padding: theme.spacing(2),
     textAlign: "center",
     color: theme.palette.text.secondary,
+  },
+  select: {
+    minWidth: 166, // such that it aligns with TextFields
   },
   paperText: {
     textAlign: "left",
@@ -46,9 +51,11 @@ function noise(v: number) {
 const TOTAL_PERIOD = 100;
 const INTERVAL = 100;
 
-// Fix today's budget and assume a linear forecast
+type Mode = "pid" | "linkedin";
+
 function App() {
   // user settings
+  const [mode, setMode] = useState<Mode>("pid");
   const [delay, setDelay] = useState<number | null>(null);
   const [kp, setKp] = useState<number>(1);
   const [ki, setKi] = useState<number>(0);
@@ -74,7 +81,26 @@ function App() {
   const [plotCumulative, setPlotCumulative] = useState<ComparePoint[]>([]);
   const [plotPacingFactors, setPlotPacingFactors] = useState<Point[]>([]);
 
+  function nextPacingFactor(
+    currentPacingFactor: number,
+    controlValue: number,
+    mode: Mode
+  ) {
+    if (mode === "pid") {
+      // TODO: What constant to use?
+      return normalize(currentPacingFactor + controlValue / 10000);
+    } else if (mode === "linkedin") {
+      return normalize(
+        (1 + Math.sign(controlValue) * 0.1) * currentPacingFactor
+      );
+    } else {
+      // Not possible
+      return currentPacingFactor;
+    }
+  }
+
   function reset() {
+    setMode("pid");
     setDelay(null);
     setKp(1);
     setKi(0);
@@ -115,9 +141,11 @@ function App() {
 
     // Cumulative
     let newPIDController = compute(pidController, newInput);
-    const newPacingFactor = normalize(
-      pacingFactor + newPIDController.controlValue / 10000
-    ); // TODO: /C
+    const newPacingFactor = nextPacingFactor(
+      pacingFactor,
+      newPIDController.controlValue,
+      mode
+    );
     const cumulativeReference = (target * newPeriod) / TOTAL_PERIOD;
     const newSetpoint = Math.max(
       0,
@@ -171,7 +199,7 @@ function App() {
               <br />
               (1) 100 periods
               <br />
-              (2) linear forecast
+              (2) Linear forecast
               <br />
               (3) During each period, if pacing factor is set to 1, then roughly
               $10000 (with noise) will be spent. Therefore please set target
@@ -182,34 +210,36 @@ function App() {
               <br />
               It allows:
               <br />
-              (1) Set Kp, Ki, Kd, and Target at the beginning of a simulation
+              (1) Set Mode, Kp, Ki, Kd, and Target at the beginning of a
+              simulation
               <br />
               (2) Pause the simulation half-way, setup a different target value,
-              and start again.
+              and start again
+              <br />
+              (3) Compare the PID-based pacing with the linkedin-paper based
+              pacing
               <br />
             </Typography>
             <Box height={30} />
-            <TextField
-              label="Kp"
-              value={kp}
-              disabled={period > 0}
-              type="number"
-              onChange={(e) => setKp(Number(e.target.value))}
-            />
-            <TextField
-              label="Ki"
-              value={ki}
-              disabled={period > 0}
-              type="number"
-              onChange={(e) => setKi(Number(e.target.value))}
-            />
-            <TextField
-              label="Kd"
-              value={kd}
-              disabled={period > 0}
-              type="number"
-              onChange={(e) => setKd(Number(e.target.value))}
-            />
+            <Select
+              disabled={delay !== null || period > 0}
+              className={classes.select}
+              value={mode}
+              onChange={(e) => {
+                const mode = e.target.value as Mode;
+                setMode(mode);
+                if (mode === "linkedin") {
+                  // linkedin paper showcases a special case of PID controller
+                  setKp(1);
+                  setKi(0);
+                  setKd(0);
+                }
+              }}
+            >
+              <MenuItem value="pid">PID</MenuItem>
+              <MenuItem value="linkedin">LinkedIn</MenuItem>
+            </Select>
+            <br />
             <TextField
               label="Target"
               value={target}
@@ -217,6 +247,31 @@ function App() {
               type="number"
               onChange={(e) => setTarget(Number(e.target.value))}
             />
+            <br />
+            <TextField
+              label="Kp"
+              value={kp}
+              disabled={mode === "linkedin" || period > 0}
+              type="number"
+              onChange={(e) => setKp(Number(e.target.value))}
+            />
+            <br />
+            <TextField
+              label="Ki"
+              value={ki}
+              disabled={mode === "linkedin" || period > 0}
+              type="number"
+              onChange={(e) => setKi(Number(e.target.value))}
+            />
+            <br />
+            <TextField
+              label="Kd"
+              value={kd}
+              disabled={mode === "linkedin" || period > 0}
+              type="number"
+              onChange={(e) => setKd(Number(e.target.value))}
+            />
+            <br />
             <div>
               {delay ? (
                 <Button onClick={() => setDelay(null)}>Stop</Button>
