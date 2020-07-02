@@ -290,21 +290,27 @@ function App() {
 
         <Grid item xs={6}>
           <Paper className={classes.paper}>
-            <h3>Cumulative Reference vs Actual</h3>
+            <Typography variant="h6" gutterBottom>
+              Cumulative Reference vs Actual
+            </Typography>
             <StyledLineChart data={plotCumulative} xMax={TOTAL_PERIOD}>
               <YAxis type="number" domain={[0, "auto"]} />
               <Line type="monotone" dataKey="reference" stroke="#8884d8" />
               <Line type="monotone" dataKey="actual" stroke="#82ca9d" />
             </StyledLineChart>
 
-            <h3>Current Reference vs Actual</h3>
+            <Typography variant="h6" gutterBottom>
+              Current Reference vs Actual
+            </Typography>
             <StyledLineChart data={plotCurrent} xMax={TOTAL_PERIOD}>
               <YAxis type="number" domain={[0, "auto"]} />
               <Line type="monotone" dataKey="reference" stroke="#8884d8" />
               <Line type="monotone" dataKey="actual" stroke="#82ca9d" />
             </StyledLineChart>
 
-            <h3>Pacing Factor</h3>
+            <Typography variant="h6" gutterBottom>
+              Pacing Factor
+            </Typography>
             <StyledLineChart data={plotPacingFactors} xMax={TOTAL_PERIOD}>
               <YAxis type="number" domain={[0, 1]} />
               <Line type="monotone" dataKey="value" stroke="#8884d8" />
