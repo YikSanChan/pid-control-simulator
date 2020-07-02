@@ -127,7 +127,10 @@ function App() {
     const newPeriod = period + 1;
 
     // Current
-    const newInput = Math.max(0, 10000 * pacingFactor + noise(1000)); // TODO: noise factor can be a setting
+    const newInput = Math.max(
+      0,
+      10000 * pacingFactor + noise(1000 * pacingFactor)
+    ); // TODO: noise factor can be a setting
     const newSumInput = sumInput + newInput;
 
     setPlotCurrent([
